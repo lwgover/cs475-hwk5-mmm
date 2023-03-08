@@ -12,12 +12,15 @@
 #include "rtclock.h"
 #include "mmm.h"
 
+//prints statistics about matrix multiplication program
 void print_stats(char* operation, int numThreads, int size){
 	printf("========\nmode: %s\nthread count: %u\nsize: %u\n========\n",operation,numThreads,size);
 }
+//does sequential matrix multiplication
 void do_seq(int size){
 	print_stats("sequential",1,size);
 }
+//does parallel matrix multiplication
 void do_par(int numThreads, int size){
 	print_stats("parallel",numThreads,size);	
 }
@@ -36,10 +39,10 @@ int main(int argc, char *argv[]) {
 		printf("Usage: parallel mode requires a positive size\nUsage: ./mmm <mode> [num threads] <size>\n");
 		return 1;
 	}else if(argc >=2 && strcmp(argv[1],"-c4")==0){
-		system("git clone https://www.github.com/lwgover/Connect4");
-		system("python3 Connect4/connect4.py -n -l 6");
-		printf("Answer yes to the following questions: ");
-		system("rm -r Connect4");
+		if(system("git clone https://www.github.com/lwgover/Connect4")){} // if statement to surpress unused warning
+		if(system("python3 Connect4/connect4.py -n -l 6")){}
+		if(system("rm -r Connect4")){}
+		return 0;
 	}else if(argc > 3 && atoi(argv[2]) < 0){
 		printf("Usage: parallel mode requires a positive num threads\nUsage: ./mmm <mode> [num threads] <size>\n");	
 		return 1;
