@@ -5,12 +5,50 @@
 #include <stdio.h>
 #include "mmm.h"
 
+//frees a double matrix of size SIZE
+void free_matrix(double** mat){
+	for(int i = 0; i < SIZE; i++) free(mat[i]);
+	free(mat);
+	mat = NULL;
+}
+
+//makes a malloced random array
+double** initMatrix(){
+	double **matrix = malloc(sizeof(*A) * SIZE);
+	for(int i=0; i<SIZE; i++){
+		matrix[i]=malloc(SIZE*sizeof(double));
+		for(int j = 0; j < SIZE; j++){
+			matrix[i][j] = (double)(rand()%(MAX + MIN + 1) - MIN);
+		}
+	}
+	return matrix;
+}
+/**
+ * prints the matrix
+ * 
+ * @param matrix - the matrix you want to print
+*/
+void print_matrix(double** matrix){
+	for(int i = 0; i < SIZE; i++){
+		printf("[ ");
+		for(int j = 0; j < SIZE; j++){
+			if(matrix[i][j] <= 9)	printf("0");
+			printf("%.0lf ",matrix[i][j]);
+		}
+		printf("]\n");
+	}
+	printf("\n");
+}
+
 /**
  * Allocate and initialize the matrices on the heap. Populate
  * the input matrices with random integers from 0 to 99
  */
 void mmm_init() {
-	// TODO
+	A = initMatrix();
+	B = initMatrix();
+	C = initMatrix();
+	D = initMatrix();
 }
 
 /**
@@ -18,28 +56,42 @@ void mmm_init() {
  * @param matrix pointer to a 2D array
  */
 void mmm_reset(double **matrix) {
-	// TODO
+	for(int i = 0; i < SIZE; i++){
+		for(int j = 0; j < SIZE; j++){
+			matrix[i][j] = 0;
+		}
+	}
 }
 
 /**
  * Free up memory allocated to all matrices
  */
 void mmm_freeup() {
-	// TODO
+	free_matrix(A);
+	free_matrix(B);
+	free_matrix(C);
+	free_matrix(D);
 }
 
 /**
  * Sequential MMM
+ * 
+ * One liner, and it's beautiful
+ * Basically it runs 3 for loops : i, j, k 
+ * for each spot in the new matrix, it sums the row and collumn dot product
+ * the if statement basically either sets the current spot to 0 then adds the running sum, or just adds the running sum to the sum at the previous k
  */
-void mmm_seq() {
-	// TODO - code to perform sequential MMM
-}
+void mmm_seq() {for(int i = 0; i < SIZE; i++) for(int j = 0; j < SIZE; j++) for(int k = 0; k < SIZE; k++) D[i][j] = k==0 ? (A[i][k] * B[k][j]) : D[i][j] + A[i][k] * B[k][j];}
 
 /**
  * Parallel MMM
  */
 void *mmm_par(void *args) {
-	// TODO - code to perform parallel MMM
+	thread_args *params = (thread_args*) args;
+	for(int i = params->start; i < params->end; i++) 
+		for(int k = 0; k < SIZE; k++) 
+			C[i/SIZE][i%SIZE] = k==0 ? (A[i/SIZE][k] * B[k][i%SIZE]) : C[i/SIZE][i%SIZE] + A[i/SIZE][k] * B[k][i%SIZE];
+	return NULL;
 }
 
 /**
@@ -49,7 +101,4 @@ void *mmm_par(void *args) {
  * @return the largest error between two corresponding elements
  * in the result matrices
  */
-double mmm_verify() {
-	// TODO
-	return -1;
-}
+double mmm_verify() {double largErr = 999999; for(int i = 0; i < SIZE; i++) for(int j = 0; j < SIZE; j++) largErr = fmin(largErr,abs(C[i][j] - D[i][j])); return largErr;} // I'm so sorry julia, but it works!
